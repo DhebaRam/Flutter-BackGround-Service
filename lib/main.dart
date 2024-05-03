@@ -49,8 +49,8 @@ Future<void> initializeService() async {
       onStart: onStart,
 
       // auto start service
-      autoStart: false,
-      isForegroundMode: false,
+      autoStart: true,
+      isForegroundMode: true,
 
       notificationChannelId: 'my_foreground',
       initialNotificationTitle: 'AWESOME SERVICE',
@@ -72,7 +72,6 @@ Future<void> initializeService() async {
 
 // to ensure this is executed
 // run app from xcode, then from xcode menu, select Simulate Background Fetch
-int value =0;
 @pragma('vm:entry-point')
 Future<bool> onIosBackground(ServiceInstance service) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -115,9 +114,10 @@ void onStart(ServiceInstance service) async {
   service.on('stopService').listen((event) {
     service.stopSelf();
   });
-
+  int value = 10;
   // bring to foreground
   Timer.periodic(const Duration(seconds: 1), (timer) async {
+    value++;
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
         /// OPTIONAL for use custom notification
@@ -138,7 +138,7 @@ void onStart(ServiceInstance service) async {
 
         // if you don't using custom notification, uncomment this
         service.setForegroundNotificationInfo(
-          title: "My App Service",
+          title: "My App Service $value",
           content: "Updated at ${DateTime.now()}",
         );
       }
@@ -146,6 +146,7 @@ void onStart(ServiceInstance service) async {
 
     /// you can see this log in logcat
     print('FLUTTER BACKGROUND SERVICE: ${DateTime.now()}');
+    print('FLUTTER BACKGROUND SERVICE: ${value}');
 
     // test using external plugin
     final deviceInfo = DeviceInfoPlugin();
@@ -165,7 +166,7 @@ void onStart(ServiceInstance service) async {
       {
         "current_date": DateTime.now().toIso8601String(),
         "device": device,
-        "value":
+        "value": value.toString()
         // "lat": ,
       },
     );
@@ -184,7 +185,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    checkService();
+    // checkService();
   }
 
   void checkService() async{
@@ -220,10 +221,13 @@ class _MyAppState extends State<MyApp> {
 
                 final data = snapshot.data!;
                 String? device = data["device"];
+                String? value = data["value"];
                 print('Device -----> ${device}');
+                print('Device Value -----> ${value}');
                 DateTime? date = DateTime.tryParse(data["current_date"]);
                 return Column(
                   children: [
+                    Text(value ?? 'Unknown'),
                     Text(device ?? 'Unknown'),
                     Text(date.toString()),
                   ],
