@@ -5,6 +5,8 @@ import 'dart:ui';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -12,6 +14,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp(options: const FirebaseOptions(
+        apiKey: "AIzaSyCAQuV9NxYB76UwM1J1UR0ND7DwSJq-6g0",
+        appId: "1:455891089327:android:4be3fcc97e17fb4537a15a",
+        messagingSenderId: "455891089327",
+        projectId: "mystore-6d10c"
+    )).whenComplete(() {
+      print("firebase initial complete completed");
+    });
+
   await initializeService();
   runApp(const MyApp());
 }
@@ -103,15 +114,18 @@ void onStart(ServiceInstance service) async {
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) {
+      print('setAsForeground -----> $event');
       service.setAsForegroundService();
     });
 
     service.on('setAsBackground').listen((event) {
+      print('setAsBackground -----> $event');
       service.setAsBackgroundService();
     });
   }
 
   service.on('stopService').listen((event) {
+    print('stopService -----> $event');
     service.stopSelf();
   });
   int value = 10;
@@ -160,16 +174,24 @@ void onStart(ServiceInstance service) async {
       final iosInfo = await deviceInfo.iosInfo;
       device = iosInfo.model;
     }
+    final service1 = FlutterBackgroundService();
+    if(await service1.isRunning()){
+      await Firebase.initializeApp();
+      CollectionReference users = FirebaseFirestore.instance.collection('background');
+      users.add({
+      'timestamp': 'fullName'}).then((value) => print("User Added"))
+          .catchError((error) => print("Failed to add user: $error"));
 
-    service.invoke(
-      'update',
-      {
-        "current_date": DateTime.now().toIso8601String(),
-        "device": device,
-        "value": value.toString()
-        // "lat": ,
-      },
-    );
+      service.invoke(
+        'update',
+        {
+          "current_date": DateTime.now().toIso8601String(),
+          "device": device,
+          "value": value.toString()
+          // "lat": ,
+        },
+      );
+    }
   });
 }
 
@@ -222,8 +244,9 @@ class _MyAppState extends State<MyApp> {
                 final data = snapshot.data!;
                 String? device = data["device"];
                 String? value = data["value"];
-                print('Device -----> ${device}');
-                print('Device Value -----> ${value}');
+                print('Device -----> $device');
+                print('Device Value -----> $value');
+
                 DateTime? date = DateTime.tryParse(data["current_date"]);
                 return Column(
                   children: [
@@ -249,20 +272,25 @@ class _MyAppState extends State<MyApp> {
             ElevatedButton(
               child: Text(text),
               onPressed: () async {
-                final service = FlutterBackgroundService();
-                var isRunning = await service.isRunning();
-                if (isRunning) {
-                  service.invoke("stopService");
-                } else {
-                  service.startService();
-                }
+                try{
+                  final service = FlutterBackgroundService();
+                  var isRunning = await service.isRunning();
+                  print('isRunning Service ---> $isRunning');
+                  if (isRunning) {
+                    service.invoke("stopService");
+                  } else {
+                    service.startService();
+                  }
 
-                if (!isRunning) {
-                  text = 'Stop Service';
-                } else {
-                  text = 'Start Service';
+                  if (!isRunning) {
+                    text = 'Stop Service';
+                  } else {
+                    text = 'Start Service';
+                  }
+                  setState(() {});
+                }catch(e){
+                  print('Start Stop Catch ---> ${e.toString()}');
                 }
-                setState(() {});
               },
             ),
             const Expanded(
@@ -292,7 +320,6 @@ class _LogViewState extends State<LogView> {
 
   @override
   void initState() {
-    print('_LogViewState ---> ');
     super.initState();
     timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       final SharedPreferences sp = await SharedPreferences.getInstance();
@@ -306,14 +333,12 @@ class _LogViewState extends State<LogView> {
 
   @override
   void dispose() {
-    print('_LogViewState ---> ');
     timer.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    print('_LogViewState --->1 ');
     return ListView.builder(
       shrinkWrap: true,
       itemCount: logs.length,

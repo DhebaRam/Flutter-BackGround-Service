@@ -46,6 +46,9 @@ dependencies:
   get: ^4.6.6
   shared_preferences: ^2.2.3
 
+  firebase_core:
+  cloud_firestore:
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

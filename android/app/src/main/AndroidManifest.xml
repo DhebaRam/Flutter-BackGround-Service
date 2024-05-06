@@ -1,11 +1,11 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.background_service_app">
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-   <!-- <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    &lt;!&ndash; Add permissions here &ndash;&gt;
+    <!--<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>-->
+    <!-- Add permissions here -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
-    &lt;!&ndash; or &ndash;&gt;
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>-->
+    <!-- or -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
     <application
         android:label="background_service_app"
         android:name="${applicationName}"
@@ -46,10 +46,13 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <service
+        <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+            android:exported="true">
+        </receiver>
+        <!--<service
             android:name="id.flutter.flutter_background_service.BackgroundService"
             android:foregroundServiceType="WhatForegroundServiceTypeDoYouWant"
-            />
+            />-->
 
     </application>
 </manifest>
