@@ -179,7 +179,7 @@ void onStart(ServiceInstance service) async {
       await Firebase.initializeApp();
       CollectionReference users = FirebaseFirestore.instance.collection('background');
       users.add({
-      'timestamp': 'fullName'}).then((value) => print("User Added"))
+      'timestamp': DateTime.now().toIso8601String(), 'value': value.toString()}).then((value) => print("User Added"))
           .catchError((error) => print("Failed to add user: $error"));
 
       service.invoke(
